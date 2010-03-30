@@ -104,10 +104,8 @@ static PyObject *bsp_verify(PyObject *self, PyObject *args)
         cap1.Form = NBioAPI_FIR_FORM_HANDLE;
         cap1.InputFIR.FIRinBSP = &fir1_handle;
     } else if(PyString_Check(rawF1)) {
-        char *text_stream;
-        PyArg_Parse(rawF1, "s", &text_stream);
+        PyArg_Parse(rawF1, "s", &fir1_text.TextFIR);
         fir1_text.IsWideChar = NBioAPI_FALSE;
-        fir1_text.TextFIR = text_stream;
         cap1.Form = NBioAPI_FIR_FORM_TEXTENCODE;
         cap1.InputFIR.TextFIR = &fir1_text;
     } else
@@ -119,10 +117,8 @@ static PyObject *bsp_verify(PyObject *self, PyObject *args)
         cap2.Form = NBioAPI_FIR_FORM_HANDLE;
         cap2.InputFIR.FIRinBSP = &fir2_handle;
     } else if(PyString_Check(rawF2)) {
-        char *text_stream;
-        PyArg_Parse(rawF2, "s", &text_stream);
+        PyArg_Parse(rawF2, "s", &fir2_text.TextFIR);
         fir2_text.IsWideChar = NBioAPI_FALSE;
-        fir2_text.TextFIR = text_stream;
         cap2.Form = NBioAPI_FIR_FORM_TEXTENCODE;
         cap2.InputFIR.TextFIR = &fir2_text;
     } else
@@ -179,7 +175,5 @@ PyMODINIT_FUNC init_bsp_module(void)
 {
     PyObject *m;
 
-    m = Py_InitModule("_bsp_module", BspMethods);
-    if(m == NULL)
-        return;
+    Py_InitModule("_bsp_module", BspMethods);
 }
