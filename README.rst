@@ -50,4 +50,4 @@ Thanks to (in no particular order):
 
 - Nitgen Brazil
   
-  - For providing documentation and allowing this code do be published
+  - For providing documentation and granting permission for this code to be published
