@@ -18,7 +18,7 @@ if __name__ == "__main__":
 
     # default verification method is via FIR handler in the device
     # but it may also be done by the text-encoded FIR, like this:
-    #  handler.verify(cap1.text(), cap2.text())
+    #  match = handler.verify(cap1.text(), cap2.text())
     match = handler.verify(cap1, cap2)
     print "your fingerprints " + (match and "do match" or "do not match")
 
