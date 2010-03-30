@@ -58,6 +58,8 @@ NBioAPI_RETURN MyCaptureCallback(NBioAPI_WINDOW_CALLBACK_PARAM_PTR_0 pCallbackPa
 
 static PyObject *bsp_capture(PyObject *self, PyObject *args)
 {
+    int purpose;
+    int timeout;
     NBioAPI_RETURN err;
     NBioAPI_HANDLE m_hBSP;
     NBioAPI_FIR_HANDLE capFIR;
@@ -65,7 +67,8 @@ static PyObject *bsp_capture(PyObject *self, PyObject *args)
     struct capture_data data;
 
     memset(&data, 0, sizeof(data));
-    if(!PyArg_ParseTuple(args, "iii", &m_hBSP, &data.image_width, &data.image_height))
+    if(!PyArg_ParseTuple(args, "iiiii", &m_hBSP,
+            &data.image_width, &data.image_height, &purpose, &timeout))
         return PyErr_Format(PyExc_TypeError, "invalid arguments");
 
     data.buffer_size = data.image_width * data.image_height;
@@ -78,17 +81,18 @@ static PyObject *bsp_capture(PyObject *self, PyObject *args)
     winOption.CaptureCallBackInfo.UserCallBackParam = &data;
 
     capFIR = NBioAPI_INVALID_HANDLE;
-    err = NBioAPI_Capture(m_hBSP, NBioAPI_FIR_PURPOSE_VERIFY, &capFIR, -1, NULL, &winOption);
+    err = NBioAPI_Capture(m_hBSP, purpose, &capFIR, timeout*1000, NULL, &winOption);
     if(err != NBioAPIERROR_NONE)
         return PyErr_Format(PyExc_RuntimeError, "cannot capture fingerprint");
 
-    return Py_BuildValue("(s#i)", data.buffer, data.buffer_size, capFIR);
+    return Py_BuildValue("(is#)", capFIR, data.buffer, data.buffer_size);
 }
 
 static PyObject *bsp_verify(PyObject *self, PyObject *args)
 {
     NBioAPI_RETURN err;
     NBioAPI_HANDLE m_hBSP;
+    NBioAPI_FIR_PAYLOAD payload;
     NBioAPI_INPUT_FIR cap1, cap2;
     NBioAPI_BOOL bResult = NBioAPI_FALSE;
     NBioAPI_FIR_HANDLE fir1_handle, fir2_handle;
@@ -125,10 +129,48 @@ static PyObject *bsp_verify(PyObject *self, PyObject *args)
         return PyErr_Format(PyExc_TypeError, "unknown format of cap2");
 
     /* warning: cannot verify text VS handle and vice-versa */
-    err = NBioAPI_VerifyMatch(m_hBSP, &cap1, &cap2, &bResult, NULL);
+    memset(&payload, 0, sizeof(payload));
+    err = NBioAPI_VerifyMatch(m_hBSP, &cap1, &cap2, &bResult, &payload);
     if(err != NBioAPIERROR_NONE)
-        return PyErr_Format(PyExc_RuntimeError, "cannot verify");
-    return Py_BuildValue("i", bResult);
+        switch(err) {
+            case NBioAPIERROR_INVALID_HANDLE:
+                return PyErr_Format(PyExc_RuntimeError, "cannot verify: invalid handle");
+            case NBioAPIERROR_INVALID_POINTER:
+                return PyErr_Format(PyExc_RuntimeError, "cannot verify: invalid pointer");
+            case NBioAPIERROR_ENCRYPTED_DATA_ERROR:
+                return PyErr_Format(PyExc_RuntimeError, "cannot verify: encrypted data error");
+            case NBioAPIERROR_INTERNAL_CHECKSUM_FAIL:
+                return PyErr_Format(PyExc_RuntimeError, "cannot verify: checksum fail");
+            case NBioAPIERROR_MUST_BE_PROCESSED_DATA:
+                return PyErr_Format(PyExc_RuntimeError, "cannot verify: must be processed data");
+            default:
+                return PyErr_Format(PyExc_RuntimeError, "cannot verify: unknown reason");
+        }
+    return Py_BuildValue("is#", bResult, payload.Data, payload.Length);
+}
+
+static PyObject *bsp_payload(PyObject *self, PyObject *args)
+{
+    NBioAPI_RETURN err;
+    NBioAPI_HANDLE m_hBSP;
+    NBioAPI_INPUT_FIR inputFIR;
+    NBioAPI_FIR_PAYLOAD payload;
+    NBioAPI_FIR_HANDLE fir_handle, fir_template;
+
+    memset(&payload, 0, sizeof(payload));
+    if(!PyArg_ParseTuple(args, "iis#", &m_hBSP, &fir_handle, &payload.Data, &payload.Length))
+        return PyErr_Format(PyExc_TypeError, "invalid arguments");
+
+    memset(&inputFIR, 0, sizeof(inputFIR));
+    inputFIR.Form = NBioAPI_FIR_FORM_HANDLE;
+    inputFIR.InputFIR.FIRinBSP = &fir_handle;
+        
+    err = NBioAPI_CreateTemplate(m_hBSP, &inputFIR, NULL, &fir_template, &payload);
+    if(err != NBioAPIERROR_NONE)
+        return PyErr_Format(PyExc_RuntimeError, "cannot create template from FIR handle");
+
+    NBioAPI_FreeFIRHandle(m_hBSP, fir_handle);
+    return Py_BuildValue("i", fir_template);
 }
 
 static PyObject *bsp_free_fir(PyObject *self, PyObject *args)
@@ -166,14 +208,13 @@ static PyMethodDef BspMethods[] = {
     {"close", bsp_close, METH_VARARGS, "close bsp device"},
     {"capture", bsp_capture, METH_VARARGS, "capture fingerprint"},
     {"verify", bsp_verify, METH_VARARGS, "verify fingerprints"},
+    {"payload", bsp_payload, METH_VARARGS, "set FIR payload"},
     {"free_fir", bsp_free_fir, METH_VARARGS, "release FIR memory"},
     {"text_fir", bsp_text_fir, METH_VARARGS, "return text-encoded FIR"},
     {NULL, NULL, 0, NULL},
 };
 
-PyMODINIT_FUNC init_bsp_module(void)
+PyMODINIT_FUNC init_bsp_core(void)
 {
-    PyObject *m;
-
-    Py_InitModule("_bsp_module", BspMethods);
+    Py_InitModule("_bsp_core", BspMethods);
 }
