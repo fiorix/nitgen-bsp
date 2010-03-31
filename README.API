@@ -87,6 +87,8 @@ CLASSES
      |      DB, a range from 1 (lowest) to 9 (highest).
      |      `timeout` seconds is only used for capturing new fingerprint, when
      |      no `finger` is supplied.
+     |
+     |      It will return the `userID` or None
      |  
      |  insert_user(self, userID, finger=None, timeout=5)
      |      Add new userID with its fingerprint into the DB

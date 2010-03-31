@@ -111,9 +111,11 @@ class Handler:
         the payload of `finger1` is returned.
         """
         if isinstance(finger1, Finger):
-            finger1 = finger1.FIR
             if finger2 is None:
+                finger1 = str(finger1.text())
                 finger2 = self.capture(timeout=timeout).text()
+            else:
+                finger1 = finger1.FIR
         elif isinstance(finger1, FingerText):
             finger1 = str(finger1)
             if finger2 is None:
@@ -198,9 +200,11 @@ class SearchEngine:
         DB, a range from 1 (lowest) to 9 (highest).
         `timeout` seconds is only used for capturing new fingerprint, when
         no `finger` is supplied.
+
+        It will return the `userID` or None.
         """
         if finger is None:
-            finger = self.__capture(timeout=timeout).text()
+            finger = str(self.__capture(timeout=timeout).text())
         elif isinstance(finger, Finger):
             finger = finger.FIR
         elif isinstance(finger, FingerText):
