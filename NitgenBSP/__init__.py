@@ -77,7 +77,7 @@ class Handler:
     def capture(self, payload=None, purpose=PURPOSE_VERIFY, timeout=5):
         """Capture a fingerprint from the device and return an instance
         of the Finger class.
-        `payload` is an optional STRING which is encoded within the FIR,
+        `payload` is an optional string which is encoded within the FIR,
         and retrieved during the verify() process.
         Default `purpose` of capture is VERIFY, but may also be ENROLL.
         The optional `timeout` is defined in seconds.
@@ -103,10 +103,10 @@ class Handler:
         order to verify both fingerprints. However, if it is passed by the user,
         it must be the same type of `finger1`. It is not possible to verify an instance
         of Finger against FingerText and vice-versa.
-        `timeout` is only used when `finger2` is not available. In this case, it will
-        be passed in to the capture() method.
+        `timeout` seconds is only used for capturing new fingerprint when no `finger2` is
+        supplied.
 
-        The return value is 0 when fingerprints doesn't match. When they match, the
+        The return value is 0 when fingerprints doesn't match. When they do match, the
         default return value is 1, unless `finger1` has an embedded payload. In this case,
         the payload of `finger1` is returned.
         """
@@ -140,10 +140,16 @@ class Handler:
         _bsp_core.close(self._handler)
 
 
-class SearchEngine(object):
+class SearchEngine:
     """The Nitgen's built-in in-memory Search Engine interface
     """
     def __init__(self, handler):
+        """Initialize the Nitgen Search Engine.
+        An instance of the Handler class is required.
+        Example::
+          nbio = NitgenBSP.Handler()
+          search_engine = NitgenBSP.SearchEngine(nbio)
+        """
         if not isinstance(handler, Handler):
             raise TypeError("SearchEngine must be initialize with an instance of the Handler class")
 
@@ -154,10 +160,17 @@ class SearchEngine(object):
     def __del__(self):
         _bsp_search.terminate(self.__handler)
 
-    def insert_user(self, userID, finger):
+    def insert_user(self, userID, finger=None, timeout=5):
         """Add new userID with its fingerprint into the DB
+        The `userID` is an integer provided by the programmer.
+        If the optional `finger` is not supplied, it will capture
+        a new fingerprint and use such data within the userID.
+        `timeout` seconds is only used for capturing new fingerprint
+        when no `finger` is supplied.
         """
-        if isinstance(finger, Finger):
+        if finger is None:
+            finger = self.__capture(timeout=timeout).text()
+        elif isinstance(finger, Finger):
             finger = finger.FIR
         elif isinstance(finger, FingerText):
             finger = str(finger)
@@ -170,7 +183,7 @@ class SearchEngine(object):
         _bsp_search.insert(self.__handler, userID, finger)
 
     def remove_user(self, userID):
-        """Remove userID from the DB
+        """Remove `userID` from the DB
         """
         if not isinstance(userID, types.IntType):
             raise TypeError("userID must be an integer")
@@ -178,6 +191,14 @@ class SearchEngine(object):
         _bsp_search.remove(self.__handler, userID)
 
     def identify(self, finger=None, security_level=5, timeout=5):
+        """Try to identify the `finger` fingerprint using the DB.
+        However, when no `finger` is supplied, it will automatically
+        capture a new fingerprint and then perform the search.
+        `security_level` is the security level used while searching the
+        DB, a range from 1 (lowest) to 9 (highest).
+        `timeout` seconds is only used for capturing new fingerprint, when
+        no `finger` is supplied.
+        """
         if finger is None:
             finger = self.__capture(timeout=timeout).text()
         elif isinstance(finger, Finger):
@@ -196,11 +217,11 @@ class SearchEngine(object):
         return _bsp_search.identify(self.__handler, finger, security_level)
 
     def save(self, filename):
-        """Save DB into filename
+        """Save DB into file
         """
         _bsp_search.save(self.__handler, filename)
 
     def load(self, filename):
-        """Load DB from filename
+        """Load DB from file
         """
         _bsp_search.load(self.__handler, filename)

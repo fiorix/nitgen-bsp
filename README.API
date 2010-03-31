@@ -1,0 +1,110 @@
+NAME
+    NitgenBSP
+
+CLASSES
+    Finger
+    FingerText
+    Handler
+    SearchEngine
+    
+    class Finger
+     |  The Finger class provides the FIR Handle, raw
+     |  image buffer provided by the device, as well as
+     |  image dimentions (width and height).
+     |  It may also convert the raw buffer to a PIL image,
+     |  as well as the Text-Encoded FIR.
+     |  
+     |  Methods defined here:
+     |  
+     |  image(self)
+     |      Return the PIL image of this fingerprint, which may be
+     |      used to be saved on disk as JPG, PNG, etc.
+     |  
+     |  set_payload(self, text)
+     |      Add text (user data) into this fingerprint record.
+     |  
+     |  text(self)
+     |      Return the Text-Encoded version of the FIR for this
+     |      fingerprint, which may be used to store the fingerprint
+     |      in a database as well as later verification.
+    
+    class FingerText
+     |  The Text-Encoded version of a fingerprint's FIR.
+     |  FingerText objects are created automatically by instances of
+     |  the Finger class, when invoking the Finger.text() method.
+    
+    class Handler
+     |  A Nitgen device handler
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self)
+     |      Initialize the Nitgen API and open the first available device
+     |      using the auto-detection mode.
+     |  
+     |  capture(self, payload=None, purpose=1, timeout=5)
+     |      Capture a fingerprint from the device and return an instance
+     |      of the Finger class.
+     |      `payload` is an optional string which is encoded within the FIR,
+     |      and retrieved during the verify() process.
+     |      Default `purpose` of capture is VERIFY, but may also be ENROLL.
+     |      The optional `timeout` is defined in seconds.
+     |  
+     |  close(self)
+     |      Close the currently opened Nitgen device
+     |  
+     |  verify(self, finger1, finger2=None, timeout=5)
+     |      Perform verification of two fingerprints.
+     |      `finger1` is mandatory and must be an instance of Finger or FingerText class.
+     |      `finger2` is optional. When it is not available, a new capture() is done in
+     |      order to verify both fingerprints. However, if it is passed by the user,
+     |      it must be the same type of `finger1`. It is not possible to verify an instance
+     |      of Finger against FingerText and vice-versa.
+     |      `timeout` seconds is only used for capturing new fingerprint when no `finger2` is
+     |      supplied.
+     |      
+     |      The return value is 0 when fingerprints doesn't match. When they do match, the
+     |      default return value is 1, unless `finger1` has an embedded payload. In this case,
+     |      the payload of `finger1` is returned.
+    
+    class SearchEngine
+     |  The Nitgen's built-in in-memory Search Engine interface
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, handler)
+     |      Initialize the Nitgen Search Engine.
+     |      An instance of the Handler class is required.
+     |      Example::
+     |        nbio = NitgenBSP.Handler()
+     |        search_engine = NitgenBSP.SearchEngine(nbio)
+     |  
+     |  identify(self, finger=None, security_level=5, timeout=5)
+     |      Try to identify the `finger` fingerprint using the DB.
+     |      However, when no `finger` is supplied, it will automatically
+     |      capture a new fingerprint and then perform the search.
+     |      `security_level` is the security level used while searching the
+     |      DB, a range from 1 (lowest) to 9 (highest).
+     |      `timeout` seconds is only used for capturing new fingerprint, when
+     |      no `finger` is supplied.
+     |  
+     |  insert_user(self, userID, finger=None, timeout=5)
+     |      Add new userID with its fingerprint into the DB
+     |      The `userID` is an integer provided by the programmer.
+     |      If the optional `finger` is not supplied, it will capture
+     |      a new fingerprint and use such data within the userID.
+     |      `timeout` seconds is only used for capturing new fingerprint
+     |      when no `finger` is supplied.
+     |  
+     |  remove_user(self, userID)
+     |      Remove `userID` from the DB
+     |  
+     |  save(self, filename)
+     |      Save DB into file
+     |  
+     |  load(self, filename)
+     |      Load DB from file
+
+DATA
+    PURPOSE_ENROLL = 3
+    PURPOSE_VERIFY = 1
