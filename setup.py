@@ -11,9 +11,8 @@ setup(
     url="http://github.com/fiorix/nitgen-bsp",
     packages=["NitgenBSP"],
     ext_modules=[
-        Extension("NitgenBSP/_bsp_core", [
-            "NitgenBSP/bsp_core.c",
-        ],
+        Extension("NitgenBSP/_bsp_core", ["NitgenBSP/bsp_core.c"],
+        Extension("NitgenBSP/_bsp_search", ["NitgenBSP/bsp_search.c"],
         include_dirs=["/usr/local/NITGEN/eNBSP/include"],
         libraries=["pthread", "NBioBSP"], )
     ]
