@@ -1,6 +1,7 @@
 #include <string.h>
 #include <Python.h>
 #include <NBioAPI.h>
+#include <NBioAPI_IndexSearch.h>
 
 static PyObject *search_initialize(PyObject *self, PyObject *args)
 {
@@ -34,7 +35,7 @@ static PyObject *search_terminate(PyObject *self, PyObject *args)
     return Py_None;
 }
 
-static PyObject *search_add_fir(PyObject *self, PyObject *args)
+static PyObject *search_insert(PyObject *self, PyObject *args)
 {
     PyObject *rawFIR;
     NBioAPI_RETURN err;
@@ -45,7 +46,7 @@ static PyObject *search_add_fir(PyObject *self, PyObject *args)
     NBioAPI_FIR_TEXTENCODE fir_text;
     NBioAPI_INDEXSEARCH_SAMPLE_INFO sample;
 
-    if(!PyArg_ParseTuple(args, "iOi", &m_hBSP, &rawFIR, &userID))
+    if(!PyArg_ParseTuple(args, "iiO", &m_hBSP, &userID, &rawFIR))
         return PyErr_Format(PyExc_TypeError, "invalid arguments");
 
     /* determine format of FIR: handler or text */
@@ -70,7 +71,7 @@ static PyObject *search_add_fir(PyObject *self, PyObject *args)
     return Py_None;
 }
 
-static PyObject *search_del_fir(PyObject *self, PyObject *args)
+static PyObject *search_remove(PyObject *self, PyObject *args)
 {
     NBioAPI_RETURN err;
     NBioAPI_HANDLE m_hBSP;
@@ -96,7 +97,7 @@ static PyObject *search_identify(PyObject *self, PyObject *args)
     NBioAPI_INPUT_FIR inputFIR;
     NBioAPI_FIR_HANDLE fir_handle;
     NBioAPI_FIR_TEXTENCODE fir_text;
-    NBioAPI_INDEXSEARCH_CALLBACK_INFO_0 info;
+    NBioAPI_INDEXSEARCH_FP_INFO info;
 
     if(!PyArg_ParseTuple(args, "iOi", &m_hBSP, &rawFIR, &seclevel))
         return PyErr_Format(PyExc_TypeError, "invalid arguments");
@@ -151,7 +152,7 @@ static PyObject *search_load(PyObject *self, PyObject *args)
     if(!PyArg_ParseTuple(args, "is", &m_hBSP, &fullpath))
         return PyErr_Format(PyExc_TypeError, "invalid arguments");
 
-    err = NBioAPI_LoadIndexSearchDBFromFile(m_hBSP, fullpath)
+    err = NBioAPI_LoadIndexSearchDBFromFile(m_hBSP, fullpath);
     if(err != NBioAPIERROR_NONE)
         return PyErr_Format(PyExc_RuntimeError, "cannot load search engine DB from file");
 
@@ -162,8 +163,8 @@ static PyObject *search_load(PyObject *self, PyObject *args)
 static PyMethodDef SearchMethods[] = {
     {"initialize", search_initialize, METH_VARARGS, "initialize search engine"},
     {"terminate", search_terminate, METH_VARARGS, "terminate search engine"},
-    {"add_fir", search_add_fir, METH_VARARGS, "add FIR to search engine"},
-    {"del_fir", search_del_fir, METH_VARARGS, "remove FIR from search engine (using uid)"},
+    {"insert", search_insert, METH_VARARGS, "insert userID with FIR into the search engine"},
+    {"remove", search_remove, METH_VARARGS, "remove userID from the search engine"},
     {"identify", search_identify, METH_VARARGS, "identify FIR using search engine"},
     {"save", search_save, METH_VARARGS, "save search engine db into file"},
     {"load", search_load, METH_VARARGS, "load search engine db from file"},
