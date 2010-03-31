@@ -20,7 +20,7 @@ static PyObject *bsp_open(PyObject *self, PyObject *args)
 
     err = NBioAPI_Init(&m_hBSP);
     if(err != NBioAPIERROR_NONE)
-        return PyErr_Format(PyExc_RuntimeError, "cannot initialize NBioAPI");
+        return PyErr_Format(PyExc_RuntimeError, "cannot initialize Nitgen API");
 
     NBioAPI_GetVersion(m_hBSP, &m_Version);
     err = NBioAPI_EnumerateDevice(m_hBSP, &dev_cnt, &dev_list);
