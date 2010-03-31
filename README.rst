@@ -14,11 +14,12 @@ Implementation details
 
 - It has been tested under Ubuntu Linux 9.10
 - Require root access level (actually depends on file permission of /dev/nitgen0)
-- Only supports the auto-detection mode (I don't have 2 devices do try manual selection)
+- Only supports the device auto-detection mode (I don't have 2 devices do try manual selection)
 - Supports verification with the FIR Handle and Text-Encoded FIR (not the FULL FIR)
 - Allows the Text-Encoded FIR to be saved on remote database for later verification
-- Text-Encoded FIR does not allow multi-byte encoding
+- Text-Encoded FIR does not allow multi-byte encoding, however, supports adding payload (user data) within
 - Ships with `PIL <http://www.pythonware.com/products/pil/>`_ support and allows saving fingerprint images as JPG, PNG, etc
+- Supports the Nitgen in-memory Search Engine API
 
 Documentation and Examples
 ==========================
@@ -34,15 +35,13 @@ Here is an example of simple usage::
  import NitgenBSP
 
  if __name__ == "__main__":
-    handler = NitgenBSP.Handler()
+    nbio = NitgenBSP.Handler()
 
-    finger = handler.capture()
+    finger = nbio.capture()
     image = finger.image()
     image.save("out.png")
 
     print "your fingerprint text-encoded FIR is:", finger.text()
-
-In the near future I'll provide support for the SDK's Search Engine API, and probably other features such as manual device selection. See the `TODO <http://github.com/fiorix/nitgen-bsp/tree/master/TODO>`_ for details.
 
 Credits
 =======
