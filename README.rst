@@ -7,7 +7,7 @@ NitgenBSP
 About
 =====
 
-NitgenBSP is a Python extentension based on the `Nitgen SDK for Linux <http://www.nitgen.com/eng/product/enbsp_sdk.html>`_. It currently supports Nitgen fingerprint recognition devices such as `Fingkey Hamster <http://www.nitgen.com/eng/product/finkey.html>`_ and `Fingkey Hamster II <http://www.nitgen.com/eng/product/finkey2.html>`_.
+NitgenBSP is a Python extension based on the `Nitgen SDK for Linux <http://www.nitgen.com/eng/product/enbsp_sdk.html>`_. It currently supports Nitgen fingerprint recognition devices such as `Fingkey Hamster <http://www.nitgen.com/eng/product/finkey.html>`_ and `Fingkey Hamster II <http://www.nitgen.com/eng/product/finkey2.html>`_.
 
 Implementation details
 ----------------------
